@@ -1,20 +1,31 @@
+const record_animation = true;
+
+const fps = 50;
+const total_frames = 300;
+const t_max = 5.2;
+const t_rate = t_max/total_frames;
+var frame = 0;
+var loop = 0;
 
 const enable_interaction = true;
 var get_mouse_pos = false;
 var get_touch_pos = false;
 
 
-var stop_animation = false;
-
-
 var phase = 10;
 var interaction_variables = [phase];
 
 var t = 0;
-var t_rate = .003;
+//var t_rate = .003;
+
+var s = 10.2;
 
 
-var fps = 60;
+var stop_animation = false;
+
+
+
+
 var fpsInterval, startTime, now, then, elapsed;
 
 var canvas = document.getElementById('canvas');
@@ -26,19 +37,21 @@ startAnimating(fps);
 
 function draw() {
 
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
+    W = canvas.width = 300; //window.innerWidth;
+    H = canvas.height = 300; //window.innerHeight;
     
     ctx.fillStyle = `rgba(0,0,0,1)`;
     ctx.fillRect(0, 0, W, H);
 
     for(let j=101; j--; ) {
-        let hue = (10*t)%360;
+        let hue = 60;
         ctx.fillStyle= `hsla(${hue}, 100%, ${90*((j+1)%2)}%, 1)`;
-        ctx.fillRect(W/2+(z=Math.cos(t/100)*Math.cos(a=j-j%2)*(k=1.03**a)-(d=10*k*(j%2+5*Math.sin(j*t/phase)))/2),H/2+z,1*d,d);
+        ctx.fillRect(W/2+(z=Math.cos(s/100)*Math.cos(a=j-j%2)*(k=1.03**a)-(d=10*k*(j%2+5*Math.sin(j*s/phase)))/2),H/2+z,1*d,d);
     }
   
-    t += t_rate;
+    
+
+    s = 10.5 + t%5.2;
     
 }
 
@@ -49,15 +62,18 @@ function startAnimating(fps) {
     then = window.performance.now();
     startTime = then;
     
-    if (!stop_animation) {
-        animate();
-    }
+    animate();
+    
  }
  
  function animate(newtime) {
     
     
      requestAnimationFrame(animate);
+
+    if (stop_animation) {
+        return;
+    }
  
      now = newtime;
      elapsed = now - then;
@@ -65,7 +81,23 @@ function startAnimating(fps) {
      if (elapsed > fpsInterval) {
         then = now - (elapsed % fpsInterval);
      
-        draw();    
+        draw();
+
+        frame = (frame+1)%total_frames;
+        t = t_rate*frame;
+        
+        if(record_animation) {
+            if (frame + 1 === total_frames) {
+                loop += 1;
+            }
+    
+            if (loop === 1) { 
+                let frame_number = frame.toString().padStart(total_frames.toString().length, '0');
+                download('image_'+frame_number+'.png', canvas);
+            }
+    
+            if (loop === 2) { stop_animation = true }
+        }
      }
 
     if(enable_interaction) {
@@ -127,3 +159,18 @@ function interaction(canvas, event, ...interaction_variables) {
 
 }
 
+function download(filename, canvas) {
+    dataURL = canvas.toDataURL();
+    var element = document.createElement('a');
+    element.setAttribute('href', dataURL);
+    element.setAttribute('download', filename);
+  
+    element.style.display = 'none';
+    document.body.appendChild(element);
+  
+    element.click();
+  
+    document.body.removeChild(element);
+  
+    console.log('Downloaded ' + filename);
+}
